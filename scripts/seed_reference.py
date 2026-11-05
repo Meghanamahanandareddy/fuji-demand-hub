@@ -8,13 +8,14 @@ from sqlalchemy import create_engine, text
 load_dotenv()
 engine = create_engine(os.getenv("DATABASE_URL"))
 
-BUSINESSES = [("railway", "Railway"), ("hotels", "Hotels")]
+BUSINESSES = [("railway", "Railway"), ("hotels", "Hotels"), ("park", "Amusement Park")]
 
 # Station names are from the public Fujikyuko Line; check them on fujikyu.co.jp.
 # Hotel names are fictional.
 LOCATIONS = {
     "railway": ["Otsuki", "Shimoyoshida", "Fuji-Q Highland", "Kawaguchiko"],
     "hotels": ["Lakeside Hotel", "Fuji View Hotel", "Highland Resort Hotel"],
+        "park": ["Fuji-Q Highland Park"],
 }
 
 # Approximate seasons, written by hand

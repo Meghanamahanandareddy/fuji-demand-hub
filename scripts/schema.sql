@@ -96,3 +96,36 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_ridership_date ON ridership_daily(date);
 CREATE INDEX IF NOT EXISTS idx_hotel_date ON hotel_daily(date);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+
+CREATE TABLE IF NOT EXISTS park_daily (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    location_id INTEGER NOT NULL REFERENCES locations(id),
+    visitors INTEGER NOT NULL CHECK (visitors >= 0),
+    avg_wait_minutes INTEGER NOT NULL CHECK (avg_wait_minutes >= 0),
+    revenue_jpy BIGINT NOT NULL CHECK (revenue_jpy >= 0),
+    UNIQUE (date, location_id)
+);
+
+CREATE TABLE IF NOT EXISTS anomalies (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id),
+    date DATE NOT NULL,
+    metric VARCHAR(30) NOT NULL,
+    observed NUMERIC(12,2) NOT NULL,
+    expected NUMERIC(12,2) NOT NULL,
+    score NUMERIC(6,2) NOT NULL,
+    detected_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (business_id, date, metric)
+);
+
+CREATE TABLE IF NOT EXISTS data_quality_log (
+    id SERIAL PRIMARY KEY,
+    source_file VARCHAR(100) NOT NULL,
+    issue_type VARCHAR(50) NOT NULL,
+    detail TEXT,
+    action_taken VARCHAR(100) NOT NULL,
+    logged_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_park_date ON park_daily(date);
