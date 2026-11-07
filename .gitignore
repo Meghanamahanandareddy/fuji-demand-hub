@@ -3,4 +3,4 @@ venv/
 __pycache__/
 *.pyc
 reports/
-.pytest_cache/
+.pytest_cache/data/raw/
