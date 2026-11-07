@@ -59,3 +59,10 @@ def weather_daily(start, end):
         "rainfall_mm::float AS rainfall_mm, sunshine_hours::float AS sunshine_hours "
         "FROM weather_daily WHERE date BETWEEN :s AND :e ORDER BY date",
         s=start, e=end)
+
+def forecasts():
+    return _read(
+        "SELECT b.code, f.target_date AS date, f.metric, "
+        "f.predicted_value::float AS predicted, f.model_name "
+        "FROM forecasts f JOIN businesses b ON b.id = f.business_id "
+        "ORDER BY b.code, f.target_date")

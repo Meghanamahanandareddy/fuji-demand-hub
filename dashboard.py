@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -6,7 +8,7 @@ from app import queries
 
 st.set_page_config(page_title="Mt. Fuji Tourism Demand Hub", layout="wide")
 st.title("Mt. Fuji Tourism Demand Hub")
-st.caption("Pilot built on synthetic data. It does not use Fuji Kyuko's real data.")
+st.caption("Pilot built on synthetic data.")
 
 
 @st.cache_data(ttl=300)
@@ -28,8 +30,8 @@ def with_trend(df, col):
     return df
 
 
-tab_rail, tab_hotel, tab_park, tab_cross = st.tabs(
-    ["Railway", "Hotels", "Amusement park", "Cross-business"])
+tab_rail, tab_hotel, tab_park, tab_cross, tab_fc = st.tabs(
+    ["Railway", "Hotels", "Amusement park", "Cross-business", "Forecast"])
 
 # ------------------------------------------------------------------ railway
 with tab_rail:
@@ -121,3 +123,33 @@ with tab_cross:
     st.plotly_chart(px.imshow(corr, text_auto=True, zmin=-1, zmax=1,
                               color_continuous_scale="RdBu"),
                     width='stretch')
+
+    # ----------------------------------------------------------------- forecast
+with tab_fc:
+    docs = Path(__file__).parent / "docs"
+    fc = load("forecasts")
+
+    st.subheader("Next 7 days")
+    labels = {"railway": "Railway passengers", "hotels": "Hotel occupancy (%)",
+              "park": "Park visitors"}
+    cols = st.columns(3)
+    for col, (code, label) in zip(cols, labels.items()):
+        part = fc[fc["code"] == code]
+        col.plotly_chart(px.bar(part, x="date", y="predicted", title=label),
+                         width="stretch")
+
+    st.subheader("How the models compared (October 2026, held out)")
+    st.caption("Average error in %, lower is better. The models never saw October.")
+    res = pd.read_csv(docs / "forecast_results.csv")
+    table = res.pivot(index="model", columns="business", values="mape_pct")
+    st.dataframe(table.sort_values("railway"), width="stretch")
+
+    st.subheader("Predicted against actual, October 2026")
+    bt = pd.read_csv(docs / "forecast_backtest.csv", parse_dates=["date"])
+    business = st.selectbox("Business", sorted(bt["business"].unique()))
+    model = st.selectbox("Model", [c for c in bt.columns
+                                   if c not in ("date", "business", "actual")],
+                         index=2)
+    part = bt[bt["business"] == business]
+    st.plotly_chart(px.line(part, x="date", y=["actual", model]),
+                    width="stretch")

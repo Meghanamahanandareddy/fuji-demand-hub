@@ -116,17 +116,21 @@ def main():
     cal_wx = cal.join(weather)
 
     series = load_series()
-    results, stored = [], []
+    results, stored, backtests = [], [], []
 
     for business, (metric, y) in series.items():
         train = y.loc[:CUTOFF]
         test = y.loc[TEST_START:TEST_END]
         scores = {}
+        bt = pd.DataFrame({"actual": test})
         for name, fn in MODELS.items():
             pred = fn(train, test.index, cal, cal_wx)
             scores[name] = mape(test, pred)
+            bt[name] = pred.to_numpy()
             results.append({"business": business, "metric": metric,
                             "model": name, "mape_pct": round(scores[name], 2)})
+        bt.insert(0, "business", business)
+        backtests.append(bt.rename_axis("date").reset_index())
 
         usable = {k: v for k, v in scores.items() if k not in NEEDS_WEATHER}
         best = min(usable, key=usable.get)
@@ -152,9 +156,11 @@ def main():
                      "WHERE code = :code"), row)
 
     pd.DataFrame(results).to_csv(DOCS / "forecast_results.csv", index=False)
+    pd.concat(backtests).to_csv(DOCS / "forecast_backtest.csv", index=False)
     print(f"\nStored {len(stored)} forecast rows for "
           f"{FORECAST_START:%d %b} to {FORECAST_END:%d %b %Y}.")
     print("Scores saved to docs/forecast_results.csv")
+    print("Daily backtest saved to docs/forecast_backtest.csv")
 
 
 if __name__ == "__main__":
