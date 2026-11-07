@@ -107,3 +107,5 @@ pytest -v
 ## Documents
 
 - [Requirements](docs/01-requirements.md)
+
+- [Data model](docs/02-data-model.md)
