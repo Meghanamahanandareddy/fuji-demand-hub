@@ -60,9 +60,18 @@ def weather_daily(start, end):
         "FROM weather_daily WHERE date BETWEEN :s AND :e ORDER BY date",
         s=start, e=end)
 
+
 def forecasts():
     return _read(
         "SELECT b.code, f.target_date AS date, f.metric, "
         "f.predicted_value::float AS predicted, f.model_name "
         "FROM forecasts f JOIN businesses b ON b.id = f.business_id "
         "ORDER BY b.code, f.target_date")
+
+
+def anomalies():
+    return _read(
+        "SELECT b.code, a.date, a.metric, a.observed::float AS observed, "
+        "a.expected::float AS expected, a.score::float AS score "
+        "FROM anomalies a JOIN businesses b ON b.id = a.business_id "
+        "ORDER BY a.date")

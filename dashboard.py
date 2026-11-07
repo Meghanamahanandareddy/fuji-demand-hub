@@ -30,8 +30,9 @@ def with_trend(df, col):
     return df
 
 
-tab_rail, tab_hotel, tab_park, tab_cross, tab_fc = st.tabs(
-    ["Railway", "Hotels", "Amusement park", "Cross-business", "Forecast"])
+tab_rail, tab_hotel, tab_park, tab_cross, tab_fc, tab_an = st.tabs(
+    ["Railway", "Hotels", "Amusement park", "Cross-business", "Forecast",
+     "Unusual days"])
 
 # ------------------------------------------------------------------ railway
 with tab_rail:
@@ -49,11 +50,11 @@ with tab_rail:
         d = with_trend(daily, "passengers")
         fig = px.line(d, x="date", y=["passengers", "7-day average"],
                       title="Daily passengers")
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, width="stretch")
         by_station = rid.groupby("station", as_index=False)["passengers"].sum()
         st.plotly_chart(px.bar(by_station, x="station", y="passengers",
                                title="Passengers by station"),
-                        width='stretch')
+                        width="stretch")
 
 # ------------------------------------------------------------------- hotels
 with tab_hotel:
@@ -73,13 +74,13 @@ with tab_hotel:
         c3.metric("Estimated room revenue", f"¥{day['revenue'].sum():,.0f}")
         d = with_trend(day, "occupancy_pct")
         st.plotly_chart(px.line(d, x="date", y=["occupancy_pct", "7-day average"],
-                                title="Occupancy (%)"), width='stretch')
+                                title="Occupancy (%)"), width="stretch")
         by_hotel = h.groupby("hotel", as_index=False).agg(
             booked=("rooms_booked", "sum"), available=("rooms_available", "sum"))
         by_hotel["occupancy_pct"] = by_hotel["booked"] / by_hotel["available"] * 100
         st.plotly_chart(px.bar(by_hotel, x="hotel", y="occupancy_pct",
                                title="Average occupancy by hotel"),
-                        width='stretch')
+                        width="stretch")
 
 # --------------------------------------------------------------------- park
 with tab_park:
@@ -90,10 +91,10 @@ with tab_park:
     c3.metric("Revenue", f"¥{p['revenue_jpy'].sum():,}")
     d = with_trend(p, "visitors")
     st.plotly_chart(px.line(d, x="date", y=["visitors", "7-day average"],
-                            title="Daily visitors"), width='stretch')
+                            title="Daily visitors"), width="stretch")
     st.plotly_chart(px.line(p, x="date", y="avg_wait_minutes",
                             title="Average wait time (minutes)"),
-                    width='stretch')
+                    width="stretch")
 
 # ------------------------------------------------------------ cross-business
 with tab_cross:
@@ -116,15 +117,15 @@ with tab_cross:
     business_cols = ["Railway passengers", "Hotel occupancy", "Park visitors"]
     index = merged[business_cols] / merged[business_cols].mean() * 100
     st.plotly_chart(px.line(index.reset_index(), x="date", y=business_cols),
-                    width='stretch')
+                    width="stretch")
 
     st.subheader("What drives demand")
     corr = merged.corr().round(2)
     st.plotly_chart(px.imshow(corr, text_auto=True, zmin=-1, zmax=1,
                               color_continuous_scale="RdBu"),
-                    width='stretch')
+                    width="stretch")
 
-    # ----------------------------------------------------------------- forecast
+# ----------------------------------------------------------------- forecast
 with tab_fc:
     docs = Path(__file__).parent / "docs"
     fc = load("forecasts")
@@ -153,3 +154,45 @@ with tab_fc:
     part = bt[bt["business"] == business]
     st.plotly_chart(px.line(part, x="date", y=["actual", model]),
                     width="stretch")
+
+# ----------------------------------------------------------- unusual days
+with tab_an:
+    st.subheader("Unusual days found automatically")
+    st.caption("Each day is compared with what the calendar alone predicts. "
+               "Score 10 or more is shown as major, below that as minor. "
+               "Rainfall and sunshine are shown as possible explanations.")
+
+    an_business = st.selectbox("Business", ["railway", "hotels", "park"],
+                               key="an_business")
+    an = load("anomalies")
+    an = an[an["code"] == an_business].copy()
+    an["severity"] = an["score"].abs().ge(10).map({True: "major", False: "minor"})
+    an = an.merge(load("weather_daily", lo, hi), on="date", how="left")
+
+    if an_business == "railway":
+        r = load("railway_daily", lo, hi, queries.location_names("railway"))
+        series = r.groupby("date", as_index=False)["passengers"].sum()
+        series.columns = ["date", "value"]
+    elif an_business == "hotels":
+        hh = load("hotel_daily", lo, hi, queries.location_names("hotels"))
+        g = hh.groupby("date")[["rooms_booked", "rooms_available"]].sum()
+        series = (g["rooms_booked"] / g["rooms_available"] * 100).reset_index()
+        series.columns = ["date", "value"]
+    else:
+        series = load("park_daily", lo, hi)[["date", "visitors"]]
+        series.columns = ["date", "value"]
+
+    c1, c2 = st.columns(2)
+    c1.metric("Major events", int((an["severity"] == "major").sum()))
+    c2.metric("Minor flags", int((an["severity"] == "minor").sum()))
+
+    fig = px.line(series, x="date", y="value", title="Daily values, unusual days in red")
+    fig.add_scatter(x=an["date"], y=an["observed"], mode="markers",
+                    name="unusual day", marker=dict(color="red", size=9))
+    st.plotly_chart(fig, width="stretch")
+
+    show = an.sort_values("score", key=lambda s: s.abs(), ascending=False)[
+        ["date", "severity", "observed", "expected", "score",
+         "rainfall_mm", "sunshine_hours"]]
+    show["date"] = show["date"].dt.strftime("%d %b %Y")
+    st.dataframe(show, width="stretch", hide_index=True)
