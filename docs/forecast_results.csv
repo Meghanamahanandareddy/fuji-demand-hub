@@ -1,0 +1,13 @@
+business,metric,model,mape_pct
+railway,passengers,Baseline (last 4 same weekdays),10.24
+railway,passengers,Holt-Winters (weekly seasonality),7.87
+railway,passengers,Gradient boosting (calendar),6.67
+railway,passengers,Gradient boosting (calendar + weather),5.11
+hotels,occupancy_pct,Baseline (last 4 same weekdays),10.03
+hotels,occupancy_pct,Holt-Winters (weekly seasonality),9.14
+hotels,occupancy_pct,Gradient boosting (calendar),7.6
+hotels,occupancy_pct,Gradient boosting (calendar + weather),6.74
+park,visitors,Baseline (last 4 same weekdays),17.22
+park,visitors,Holt-Winters (weekly seasonality),15.62
+park,visitors,Gradient boosting (calendar),12.6
+park,visitors,Gradient boosting (calendar + weather),6.74
