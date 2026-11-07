@@ -4,9 +4,7 @@ A pilot analytics platform built for the Fuji Kyuko Group's DX work. It brings
 railway, hotel, and amusement park data into one place, forecasts next week's
 demand, flags unusual days automatically, and controls who can see what.
 
-> **All data is synthetic.** This project does not use any real Fuji Kyuko data.
-> It is a pilot to show an approach.
-
+> **All data is synthetic.** 
 ## The problem
 
 Railways, hotels, and the park all depend on the same visitors, but each tracks its
