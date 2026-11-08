@@ -1,11 +1,13 @@
-"""REST API: login, role-based access to business data, forecasts, audit log."""
+"""REST API: login, role-based access to business data, forecasts, questions,
+audit log."""
 from datetime import date
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
-from app import audit, security
+from app import assistant, audit, security
 from app.db import engine
 
 app = FastAPI(title="Mt. Fuji Tourism Demand Hub API")
@@ -21,6 +23,10 @@ DAILY_SQL = {
     "park": "SELECT date, visitors::float AS value FROM park_daily "
             "WHERE date BETWEEN :s AND :e ORDER BY date",
 }
+
+
+class Question(BaseModel):
+    question: str = Field(min_length=3, max_length=300)
 
 
 def get_user(token: str = Depends(oauth2)):
@@ -97,6 +103,16 @@ def forecast(code: str, user=Depends(get_user)):
     return {"business": code, "metric": METRIC[code],
             "data": [{"date": r[0].isoformat(), "predicted": r[1],
                       "model": r[2]} for r in rows]}
+
+
+@app.post("/ask")
+def ask_question(body: Question, user=Depends(get_user)):
+    result = assistant.ask(body.question, user["businesses"])
+    if result["status"] == "forbidden":
+        audit.write(user["id"], "access_denied", f"ask business={result['business']}")
+        raise HTTPException(403, "You do not have access to this business")
+    audit.write(user["id"], "question", f"{result['status']}: {body.question[:300]}")
+    return result
 
 
 @app.get("/audit-log")
