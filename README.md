@@ -19,8 +19,11 @@ picture, and simple questions need someone to pull data first.
 | **Dashboard** | Railway, hotels, amusement park, and a cross-business view showing how demand and weather move together |
 | **Forecasting** | Four models compared on a held-out month (October 2026). Best calendar-based model: 6.7% error for railway, 7.6% for hotels, 12.6% for the park |
 | **Anomaly detection** | Finds unusual days by comparing each day with what the calendar predicts. It found the planted typhoon (16 to 20 Sep 2025) in all three businesses without being told about it |
+| **Question assistant** | Managers ask plain-language questions ("Which day last month had the lowest occupancy?", "Why did occupancy drop on 18 September 2025?"). It matches each question to a known type and runs a fixed query on a read-only database login that cannot see the users or audit tables. It respects roles, and every question is audited |
+| **Weekly reports** | One command produces a PDF and an Excel file per business: key figures, daily chart, unusual days and the next 7-day forecast. Each run is recorded in the database and the audit log |
 | **Secure API** | FastAPI with salted password hashing, signed login tokens, role-based access (manager, planner, admin), and an audit log |
 | **Tests** | Automated tests, including: a hotel manager cannot view railway data |
+Sample report: [hotels, week ending 31 Oct 2026](docs/samples/hotels_week_ending_2026-10-31.pdf)
 
 ## Screenshots
 

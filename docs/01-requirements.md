@@ -48,7 +48,7 @@ Status: **Done** = built and working, **Partly** = some of it built,
 | US-02 | As a business manager, I want to filter the dashboard by date range and location, so that I can compare busy and quiet periods. | Must | Done |
 | US-03 | As a business manager, I want to see a forecast of next week's demand, so that I can plan staff, trains, or rooms in advance. | Must | Done |
 | US-04 | As a business manager, I want to ask a question in plain language (for example, "Which day last month had the lowest occupancy?"), so that I get an answer without waiting for an analyst. | Should | Planned |
-| US-05 | As a business manager, I want a weekly report delivered automatically as a PDF or Excel file, so that I don't have to build it by hand. | Must | Planned |
+| US-05 | As a business manager, I want a weekly report delivered automatically as a PDF or Excel file, so that I don't have to build it by hand. | Must | Done |
 | US-06 | As a DX planner, I want to see all businesses side by side, so that I can understand how demand in one business affects the others. | Must | Done |
 | US-07 | As a DX planner, I want to see how weather and Japanese holidays relate to demand, so that I can explain why numbers rose or fell. | Should | Done |
 | US-08 | As a DX planner, I want data from each source loaded and cleaned automatically, so that I can spend my time on analysis. | Must | Done |
